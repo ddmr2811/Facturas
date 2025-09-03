@@ -368,13 +368,22 @@ def detectar_comunidad_factura(texto, tipo_gasto):
         m_dir_suministro = re.search(r'Dir\.?\s*Suministro[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
         if m_dir_suministro:
             comunidad = m_dir_suministro.group(1).strip()
-            # Limpiar y eliminar "COM PROP" y similares
+            
+            # Tratamiento especial para agua: limpiar más agresivamente
+            # Eliminar "COM PROP" y similares
             comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
             comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
-            # Limpiar guiones y comas al final, y espacios múltiples
+            
+            # Para agua: cortar antes de TOLEDO y limpiar ciudades/códigos postales
+            comunidad = re.sub(r',?\s*TOLEDO.*$', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r',?\s*\d{5}.*$', '', comunidad)  # Eliminar códigos postales y lo que sigue
+            
+            # Limpiar guiones, comas y espacios al final
             comunidad = re.sub(r'[\s,\-]+$', '', comunidad)
             comunidad = re.sub(r'\s+', ' ', comunidad).strip()
-            return comunidad if comunidad else None
+            
+            # Si queda algo válido, devolverlo
+            return comunidad if comunidad and len(comunidad) > 3 else None
     
     # Para facturas de electricidad/luz: buscar después de "Nombre/Razón social:"
     elif tipo_gasto and tipo_gasto.lower() in ['electricidad', 'luz']:
@@ -946,18 +955,7 @@ def pdf_preview(filename):
         if not os.path.exists(filepath):
             return jsonify({"success": False, "error": "Archivo no encontrado"}), 404
         
-        # Si no hay librerías para procesar PDFs, devolver imagen de marcador de posición
-        if not PDF_PREVIEW_ENABLED:
-            return jsonify({
-                "success": True, 
-                "imageData": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAwIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCI+VmlzdGEgcHJldmlhIG5vIGRpc3BvbmlibGU8L3RleHQ+Cjx0ZXh0IHg9IjQwMCIgeT0iNTQwIiBmaWxsPSIjNjM3Mzg1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+SW5zdGFsZSBwZGYyaW1hZ2UgcGFyYSB2ZXIgUERGczwvdGV4dD4KPC9zdmc+",
-                "currentPage": 1,
-                "totalPages": 1,
-                "limitedPreview": True,
-                "message": "Para ver la vista previa del PDF, instala: pip install pdf2image"
-            })
-        
-        # Obtener número total de páginas
+        # Obtener número total de páginas de forma más robusta
         total_pages = 1
         if PYPDF2_ENABLED:
             try:
@@ -965,29 +963,126 @@ def pdf_preview(filename):
                     pdf_reader = PyPDF2.PdfReader(pdf_file)
                     total_pages = len(pdf_reader.pages)
             except Exception as e:
-                print(f"Error al obtener páginas: {e}")
+                print(f"Error al obtener páginas con PyPDF2: {e}")
         
-        # Convertir página a imagen
-        images = convert_from_path(filepath, first_page=page, last_page=page, dpi=150)
-        if not images:
-            raise Exception("No se pudo convertir la página del PDF")
+        # Si no hay pdf2image, devolver placeholder
+        if not PDF_PREVIEW_ENABLED:
+            return jsonify({
+                "success": True, 
+                "imageData": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAwIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCI+VmlzdGEgcHJldmlhIG5vIGRpc3BvbmlibGU8L3RleHQ+Cjx0ZXh0IHg9IjQwMCIgeT0iNTQwIiBmaWxsPSIjNjM3Mzg1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+SW5zdGFsZSBwZGYyaW1hZ2UgcGFyYSB2ZXIgUERGczwvdGV4dD4KPC9zdmc+",
+                "currentPage": 1,
+                "totalPages": total_pages,
+                "limitedPreview": True,
+                "message": "Para ver la vista previa del PDF, instala: pip install pdf2image"
+            })
         
-        # Convertir a base64
-        img_io = BytesIO()
-        images[0].save(img_io, 'JPEG', quality=85)
-        img_io.seek(0)
-        
-        encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
-        
-        return jsonify({
-            "success": True, 
-            "imageData": f"data:image/jpeg;base64,{encoded}",
-            "currentPage": page,
-            "totalPages": total_pages
-        })
+        # Intentar convertir con pdf2image con configuración específica
+        try:
+            # Configurar poppler_path para diferentes sistemas
+            poppler_path = None
+            # En contenedores Linux, poppler suele estar en PATH
+            
+            images = convert_from_path(
+                filepath, 
+                first_page=page, 
+                last_page=page, 
+                dpi=150,
+                poppler_path=poppler_path,
+                timeout=30
+            )
+            
+            if not images:
+                raise Exception("No se pudo convertir la página del PDF")
+            
+            # Convertir a base64
+            img_io = BytesIO()
+            images[0].save(img_io, 'JPEG', quality=85)
+            img_io.seek(0)
+            
+            encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
+            
+            return jsonify({
+                "success": True, 
+                "imageData": f"data:image/jpeg;base64,{encoded}",
+                "currentPage": page,
+                "totalPages": total_pages
+            })
+            
+        except Exception as e:
+            print(f"Error con pdf2image: {str(e)}")
+            
+            # Fallback: generar imagen con texto extraído
+            if PIL_ENABLED:
+                try:
+                    img = Image.new('RGB', (800, 1000), color='white')
+                    draw = ImageDraw.Draw(img)
+                    
+                    # Intentar cargar fuente, si no usar default
+                    try:
+                        font_title = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 24)
+                        font_text = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 16)
+                    except:
+                        try:
+                            font_title = ImageFont.load_default()
+                            font_text = ImageFont.load_default()
+                        except:
+                            font_title = font_text = None
+                    
+                    # Título
+                    draw.text((50, 50), f"Vista previa - {filename}", fill='black', font=font_title)
+                    draw.text((50, 80), f"Página {page} de {total_pages}", fill='gray', font=font_text)
+                    
+                    # Extraer y mostrar texto si es posible
+                    y_pos = 120
+                    if PYPDF2_ENABLED and page <= total_pages:
+                        try:
+                            with open(filepath, 'rb') as pdf_file:
+                                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                                if len(pdf_reader.pages) >= page:
+                                    extracted_text = pdf_reader.pages[page-1].extract_text()
+                                    if extracted_text:
+                                        lines = extracted_text.split('\n')[:25]  # Primeras 25 líneas
+                                        for line in lines:
+                                            if y_pos > 950:  # No exceder el límite
+                                                break
+                                            # Truncar líneas muy largas
+                                            line = line[:80] + '...' if len(line) > 80 else line
+                                            draw.text((50, y_pos), line, fill='black', font=font_text)
+                                            y_pos += 25
+                        except Exception as text_error:
+                            draw.text((50, y_pos), f"Error al extraer texto: {str(text_error)}", fill='red', font=font_text)
+                    
+                    # Guardar imagen
+                    img_io = BytesIO()
+                    img.save(img_io, 'JPEG', quality=85)
+                    img_io.seek(0)
+                    
+                    encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
+                    
+                    return jsonify({
+                        "success": True, 
+                        "imageData": f"data:image/jpeg;base64,{encoded}",
+                        "currentPage": page,
+                        "totalPages": total_pages,
+                        "limitedPreview": True,
+                        "message": f"Vista previa de texto (pdf2image falló: {str(e)})"
+                    })
+                    
+                except Exception as pil_error:
+                    print(f"Error con PIL fallback: {str(pil_error)}")
+            
+            # Último fallback: SVG simple
+            return jsonify({
+                "success": True, 
+                "imageData": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iNDgwIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCI+RXJyb3IgZW4gdmlzdGEgcHJldmlhPC90ZXh0Pgo8dGV4dCB4PSI0MDAiIHk9IjUyMCIgZmlsbD0iIzYzNzM4NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPlBvcHBsZXIgbm8gZGlzcG9uaWJsZTwvdGV4dD4KPHR5eHQgeD0iNDAwIiB5PSI1NjAiIGZpbGw9IiM2MzczODUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0Ij5Vc2UgZWwgZW5sYWNlIGRlIGRlc2NhcmdhPC90ZXh0Pgo8L3N2Zz4K",
+                "currentPage": page,
+                "totalPages": total_pages,
+                "limitedPreview": True,
+                "message": f"Error con poppler: {str(e)}"
+            })
         
     except Exception as e:
-        print(f"Error en pdf_preview: {str(e)}")
+        print(f"Error general en pdf_preview: {str(e)}")
         return jsonify({
             "success": False, 
             "error": f"Error al cargar la vista previa: {str(e)}"

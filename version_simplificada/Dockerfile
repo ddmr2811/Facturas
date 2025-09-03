@@ -8,6 +8,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     poppler-utils \
+    libpoppler-cpp-dev \
+    pkg-config \
+    fontconfig \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements
