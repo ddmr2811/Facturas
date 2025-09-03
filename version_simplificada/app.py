@@ -179,7 +179,7 @@ def detectar_cups_o_contador(texto):
     if m:
         return m.group(1).upper()
     
-    # 2. Buscar códigos numéricos específicos de facturas (como los de Buenavista)
+    # 2. Buscar códigos numéricos específicos de facturas
     # Patrones para códigos de 10 dígitos como 0039889075, 0016633368, etc.
     m_codigo = re.search(r'\b(0\d{9})\b', texto)
     if m_codigo:
@@ -223,28 +223,28 @@ def detectar_direccion(texto):
         direccion = re.sub(r'\s+', ' ', direccion)
         return direccion
     
-    # Buscar direcciones en mappings primero
+    # Buscar direcciones genéricas en mappings primero
     for v in MAPEO_CUENTAS_CONTABLES.values():
         dirref = v.get('direccion_referencia', '')
         if dirref and dirref.upper() in texto.upper():
             return dirref
     
-    # Buscar "AVDA. RECONQUISTA" completo hasta separadores
-    m_avda = re.search(r'AVDA\.?\s*RECONQUISTA\s*\d+[^,\-/\n\r]*', texto, re.IGNORECASE)
+    # Buscar patrones genéricos de direcciones
+    m_avda = re.search(r'AVDA\.?\s*[A-Z]+\s*\d+[^,\-/\n\r]*', texto, re.IGNORECASE)
     if m_avda:
         direccion = m_avda.group(0).strip()
         # Quitar caracteres al final que puedan ser problemáticos
         direccion = re.sub(r'[,\-/\s]+$', '', direccion)
         return direccion
     
-    # Buscar variantes de RECONQUISTA sin AVDA
+    # Buscar variantes genéricas
     tex = texto.upper()
-    if 'RECONQUISTA' in tex:
-        m = re.search(r'RECONQUISTA\s*\d+[^,\-/\n\r]*', tex)
-        if m:
-            direccion = m.group(0).strip()
-            direccion = re.sub(r'[,\-/\s]+$', '', direccion)
-            return direccion
+    # Buscar cualquier patrón de calle + número
+    m = re.search(r'[A-Z]+\s*\d+[^,\-/\n\r]*', tex)
+    if m:
+        direccion = m.group(0).strip()
+        direccion = re.sub(r'[,\-/\s]+$', '', direccion)
+        return direccion
     
     # fallback genérico
     m2 = re.search(r'CL(?:ALE )?\.?\s*[A-Z0-9\s]+\d+[^,\-/\n\r]*', tex)
@@ -454,47 +454,7 @@ def asignar_cuenta_contable_con_tipos(cups_o_contador, direccion, tipo_gasto):
             if direccion_ref and direccion_ref in direccion_upper:
                 return entry.get('comunidad', 'No detectada'), entry.get('cuenta', '628')
     
-    # 4. Detección especial para Buenavista basada en texto de dirección
-    if direccion:
-        direccion_upper = direccion.upper()
-        
-        # Patrones específicos de Buenavista
-        if 'BUENAVISTA' in direccion_upper or 'COPROPIETARIOS RONDA BUENAVISTA' in direccion_upper:
-            # Intentar extraer número específico
-            numero_match = re.search(r'BUENAVISTA\s+22\s+(\d+)\s*(BAJO\s*[AB]?)?', direccion_upper)
-            if numero_match:
-                numero = numero_match.group(1)
-                bajo = numero_match.group(2)
-                
-                if bajo:
-                    if 'A' in bajo:
-                        if numero == '2':
-                            return 'BUENAVISTA 22 2 Bajo A', '6281111'
-                        elif numero == '3':
-                            return 'BUENAVISTA 22 3 Bajo A', '6282111'
-                    elif 'B' in bajo:
-                        if numero == '2':
-                            return 'BUENAVISTA 22 2 Bajo B', '6281333'
-                    else:  # Solo "BAJO"
-                        if numero == '1':
-                            return 'BUENAVISTA 22 1 Bajo', '6281222'
-                        elif numero == '3':
-                            return 'BUENAVISTA 22 3 Bajo', '6281999'
-                else:
-                    # Sin "bajo"
-                    if numero == '1':
-                        return 'BUENAVISTA 22 1', '6281777'
-                    elif numero == '2':
-                        return 'BUENAVISTA 22 2', '6281444'
-                    elif numero == '3':
-                        return 'BUENAVISTA 22 3', '6281666'
-                    elif numero == '4':
-                        return 'BUENASVISTA 22 4', '6281555'
-            
-            # Fallback para Buenavista genérico
-            return 'BUENAVISTA 22', '6281444'
-    
-    # 5. Fallback por tipo
+    # 4. Fallback por tipo
     if tipo_gasto == 'Agua':
         return 'COMUNIDAD AGUA', '6281111'
     if tipo_gasto == 'Luz' or tipo_gasto == 'Electricidad':
@@ -542,7 +502,7 @@ def procesar_pdf_texto(file_path):
         Proveedor: EMPRESA EJEMPLO S.L.
         Fecha: 15/01/2025
         TOTAL: 125,50 €
-        DIRECCIÓN: C/ RECONQUISTA 14 A
+        DIRECCIÓN: C/ EJEMPLO 14 A
         CONTADOR: Q22EA038022
         """
     
@@ -921,7 +881,7 @@ def upload_file():
         elif contador:
             chosen_location = f"Contador {contador}"
 
-        # Generar nombre renombrado con formato: Agua Reconquista 14 C 08-04-2024 11,10EUR
+        # Generar nombre renombrado con formato: Agua Direccion XX 08-04-2024 11,10EUR
         fecha_para_nombre = fecha_factura or datetime.now().strftime("%d/%m/%Y")
         # Reemplazar barras por guiones para compatibilidad con sistemas de archivos
         fecha_para_nombre = fecha_para_nombre.replace("/", "-")
@@ -945,7 +905,7 @@ def upload_file():
         else:
             estado_validacion = "danger"   # Rojo
 
-        # Construir texto simple para copia al portapapeles: "Agua RECONQUISTA 14 C Periodo Facturacion de ABR-MAY 2024 13,57€"
+        # Construir texto simple para copia al portapapeles: "Agua DIRECCION XX Periodo Facturacion de ABR-MAY 2024 13,57€"
         texto_copia = []
         if tipo:
             texto_copia.append(tipo)
