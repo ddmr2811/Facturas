@@ -114,22 +114,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Obtener datos de la fila para mostrar en el modal
         const nombre = row.cells[1].textContent;
-        const cuenta = row.cells[4].textContent;
+        const direccion = row.cells[4].textContent;  // Era "cuenta" ahora es dirección
         const tipo = row.cells[5].textContent;
-        const precio = row.cells[6].textContent;
-        const estado = row.cells[7].textContent;
+        const fecha = row.cells[6].textContent;      // Era "precio" ahora es fecha
+        const importe = row.cells[7].textContent;    // Era "estado" ahora es importe
         const comunidad = row.cells[8].textContent;
-        const numero = row.cells[9].textContent;
-        const fecha = row.cells[3].textContent;
+        const cuentaContable = row.cells[9].textContent; // Era "numero" ahora es cuenta contable
         
-        // Llenar el modal
-        document.getElementById('modal-view-nombre').textContent = nombre;
-        document.getElementById('modal-view-cuenta').textContent = cuenta;
+        // Llenar el modal con los nuevos mapeos
+        document.getElementById('modal-view-cuenta').textContent = direccion;      // Dirección
         document.getElementById('modal-view-comunidad').textContent = comunidad;
-        document.getElementById('modal-view-fecha').textContent = fecha;
-        document.getElementById('modal-view-numero').textContent = numero;
-        document.getElementById('modal-view-estado').textContent = estado;
-        document.getElementById('modal-view-precio').textContent = precio;
+        document.getElementById('modal-view-numero').textContent = cuentaContable; // Cuenta Contable  
+        document.getElementById('modal-view-estado').textContent = importe;        // Importe Total
+        document.getElementById('modal-view-precio').textContent = fecha;          // Fecha
         document.getElementById('modal-view-tipo').textContent = tipo;
         
         // Configurar botones del modal

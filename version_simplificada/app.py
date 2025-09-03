@@ -283,12 +283,20 @@ def detectar_periodo_facturacion(texto):
         return None
     texto_u = texto.upper()
     
-    # 1. Buscar "Periodo Facturado:" seguido del periodo
+    # 1. Buscar "Periodo de Medida:" específico para facturas de luz
+    m_medida = re.search(r'PERIODO\s*DE\s*MEDIDA\s*:\s*(.*?)(?:\n|$)', texto_u)
+    if m_medida:
+        periodo_texto = m_medida.group(1).strip()
+        # Limpiar texto extra pero mantener fechas completas
+        periodo_limpio = re.sub(r'\s+', ' ', periodo_texto)
+        return periodo_limpio
+    
+    # 2. Buscar "Periodo Facturado:" seguido del periodo
     m_facturado = re.search(r'PERIODO\s*FACTURADO[:\s]*((?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[^0-9]*\d{4}(?:\s*[-–—]\s*(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)[^0-9]*\d{4})?)', texto_u)
     if m_facturado:
         return m_facturado.group(1)
     
-    # 2. Buscar formatos como "FEB-MAR 2024" o "DIC 2024 - ENE 2025"
+    # 3. Buscar formatos como "FEB-MAR 2024" o "DIC 2024 - ENE 2025"
     m_meses = re.search(r'((?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)\s*(?:[-–—]\s*)?(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)?\s*\d{4}(?:\s*[-–—]\s*(?:ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)?\s*\d{4})?)', texto_u)
     if m_meses:
         return m_meses.group(1)
