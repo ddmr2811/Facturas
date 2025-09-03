@@ -1,0 +1,17 @@
+*.pdf
+*.pyc
+__pycache__/
+.git/
+.gitignore
+venv/
+.venv/
+env/
+.env
+node_modules/
+.DS_Store
+Thumbs.db
+uploads/*.pdf
+20241009_ES0021000007518736GX_23-57.pdf
+20250402_ES0021000007518727GR_36-52.pdf
+20250804_ES0021000007518742GQ_16-50.pdf
+recibo*.pdf
