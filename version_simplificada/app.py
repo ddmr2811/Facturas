@@ -133,101 +133,19 @@ def create_default_users():
 # Datos de facturas (simulado)
 FACTURAS_DATA = []
 
-# Cargar mappings secretos si existen (no versionados)
+# Cargar mappings secretos desde secret_mappings.py
 try:
-    from secret_mappings import MAPEO_CUENTAS_CONTABLES as SECRET_MAPEO_CUENTAS, DIRECCIONES_POR_TIPO as SECRET_DIRECCIONES, CODIGOS_AGUA_DISPONIBLES as SECRET_CODIGOS_AGUA
-except Exception:
-    SECRET_MAPEO_CUENTAS = {}
-    SECRET_DIRECCIONES = {}
-    SECRET_CODIGOS_AGUA = {}
-
-# Integrar los mappings secretos en las estructuras locales (si existen)
-if 'MAPEO_CUENTAS_CONTABLES' not in globals():
+    from secret_mappings import (
+        MAPEO_CUENTAS_CONTABLES, 
+        DIRECCIONES_POR_TIPO, 
+        CODIGOS_AGUA_DISPONIBLES
+    )
+    print("✅ Mapeos sensibles cargados desde secret_mappings.py")
+except ImportError:
+    print("⚠️ No se encontró secret_mappings.py, usando mapeos vacíos")
     MAPEO_CUENTAS_CONTABLES = {}
-
-if 'DIRECCIONES_POR_TIPO' not in globals():
     DIRECCIONES_POR_TIPO = {}
-
-if 'CODIGOS_AGUA_DISPONIBLES' not in globals():
     CODIGOS_AGUA_DISPONIBLES = {}
-
-# Mapeo específico para Buenavista 22 (si no existe en secret_mappings)
-MAPEO_BUENAVISTA_DEFAULT = {
-    # CUPS para facturas de luz de Buenavista
-    "ES0021000007518736GX": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 1",
-        "cuenta": "6281777",
-        "direccion_referencia": "BUENAVISTA 22 1"
-    },
-    "ES0021000007518727GR": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3", 
-        "cuenta": "6281666",
-        "direccion_referencia": "BUENAVISTA 22 3"
-    },
-    "ES0021000007518742GQ": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2",
-        "cuenta": "6281444", 
-        "direccion_referencia": "BUENAVISTA 22 2"
-    },
-    "ES0021000007518718AS": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 BJ 2",
-        "cuenta": "6282000",
-        "direccion_referencia": "BUENAVISTA 22 BJ 2"
-    },
-    "ES0021000007518752MA": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 4",
-        "cuenta": "6281555",
-        "direccion_referencia": "BUENAVISTA 22 4"
-    },
-    "ES0021000007518728GW": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2 BAJO B",
-        "cuenta": "6281333",
-        "direccion_referencia": "BUENAVISTA 22 2 BAJO B"
-    },
-    # Añadir otros CUPS según aparezcan en las facturas
-    "CUPS_BAJO_A": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2 BAJO A",
-        "cuenta": "6281111",
-        "direccion_referencia": "BUENAVISTA 22 2 BAJO A"
-    },
-    "CUPS_1_BAJO": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 1 BAJO",
-        "cuenta": "6281222", 
-        "direccion_referencia": "BUENAVISTA 22 1 BAJO"
-    },
-    "CUPS_3_BAJO_A": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3 BAJO A",
-        "cuenta": "6282111",
-        "direccion_referencia": "BUENAVISTA 22 3 BAJO A"
-    },
-    "CUPS_3_BAJO": {
-        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3 BAJO", 
-        "cuenta": "6281999",
-        "direccion_referencia": "BUENAVISTA 22 3 BAJO"
-    }
-}
-
-# Aplicar mappings por defecto si no existen secretos
-if not SECRET_MAPEO_CUENTAS:
-    MAPEO_CUENTAS_CONTABLES.update(MAPEO_BUENAVISTA_DEFAULT)
-
-if SECRET_MAPEO_CUENTAS:
-    try:
-        MAPEO_CUENTAS_CONTABLES.update(SECRET_MAPEO_CUENTAS)
-    except NameError:
-        MAPEO_CUENTAS_CONTABLES = SECRET_MAPEO_CUENTAS
-
-if SECRET_DIRECCIONES:
-    try:
-        DIRECCIONES_POR_TIPO.update(SECRET_DIRECCIONES)
-    except NameError:
-        DIRECCIONES_POR_TIPO = SECRET_DIRECCIONES
-
-if SECRET_CODIGOS_AGUA:
-    try:
-        CODIGOS_AGUA_DISPONIBLES.update(SECRET_CODIGOS_AGUA)
-    except NameError:
-        CODIGOS_AGUA_DISPONIBLES = SECRET_CODIGOS_AGUA
 
 # Utilidades de detección
 def _normalize_dir_key(s):
