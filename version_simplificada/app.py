@@ -1026,32 +1026,68 @@ def pdf_preview(filename):
         
         # Intentar convertir con pdf2image con configuración específica
         try:
-            # Detectar poppler automáticamente
+            # Detectar y configurar poppler automáticamente
             import subprocess
             import shutil
             
             poppler_path = None
+            poppler_working = False
             
             # Verificar si pdftoppm está disponible en PATH
             if shutil.which('pdftoppm'):
-                print("Poppler encontrado en PATH")
-            else:
+                print("✅ Poppler encontrado en PATH")
+                try:
+                    # Verificar que funciona
+                    result = subprocess.run(['pdftoppm', '-v'], 
+                                          capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        poppler_working = True
+                        print("✅ Poppler verificado y funcionando")
+                except Exception as e:
+                    print(f"❌ Error al verificar poppler: {e}")
+            
+            if not poppler_working:
+                print("⚠️ Poppler no funciona en PATH, buscando alternativas...")
                 # Intentar rutas comunes en contenedores Linux
                 common_paths = [
                     '/usr/bin',
                     '/usr/local/bin',
-                    '/bin'
+                    '/bin',
+                    '/opt/poppler/bin'
                 ]
                 for path in common_paths:
-                    if os.path.exists(os.path.join(path, 'pdftoppm')):
-                        poppler_path = path
-                        print(f"Poppler encontrado en: {poppler_path}")
-                        break
+                    pdftoppm_path = os.path.join(path, 'pdftoppm')
+                    if os.path.exists(pdftoppm_path):
+                        try:
+                            result = subprocess.run([pdftoppm_path, '-v'], 
+                                                  capture_output=True, text=True, timeout=5)
+                            if result.returncode == 0:
+                                poppler_path = path
+                                poppler_working = True
+                                print(f"✅ Poppler encontrado y verificado en: {poppler_path}")
+                                break
+                        except Exception as e:
+                            print(f"❌ Error al verificar poppler en {path}: {e}")
             
-            # Configurar variables de entorno si es necesario
-            env = os.environ.copy()
-            if poppler_path:
-                env['PATH'] = f"{poppler_path}:{env.get('PATH', '')}"
+            if not poppler_working:
+                # Intentar instalación automática
+                print("🔧 Intentando instalar poppler automáticamente...")
+                try:
+                    subprocess.run(['apt-get', 'update'], check=True, timeout=30)
+                    subprocess.run(['apt-get', 'install', '-y', 'poppler-utils'], 
+                                 check=True, timeout=60)
+                    
+                    # Verificar de nuevo
+                    if shutil.which('pdftoppm'):
+                        poppler_working = True
+                        print("✅ Poppler instalado y configurado")
+                except Exception as e:
+                    print(f"❌ Error al instalar poppler: {e}")
+            
+            # Si aún no funciona, intentar último fallback
+            if not poppler_working:
+                print("❌ Poppler no disponible - usando fallback")
+                raise Exception("Poppler no está disponible en el sistema")
             
             images = convert_from_path(
                 filepath, 
