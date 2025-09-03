@@ -151,6 +151,66 @@ if 'DIRECCIONES_POR_TIPO' not in globals():
 if 'CODIGOS_AGUA_DISPONIBLES' not in globals():
     CODIGOS_AGUA_DISPONIBLES = {}
 
+# Mapeo específico para Buenavista 22 (si no existe en secret_mappings)
+MAPEO_BUENAVISTA_DEFAULT = {
+    # CUPS para facturas de luz de Buenavista
+    "ES0021000007518736GX": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 1",
+        "cuenta": "6281777",
+        "direccion_referencia": "BUENAVISTA 22 1"
+    },
+    "ES0021000007518727GR": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3", 
+        "cuenta": "6281666",
+        "direccion_referencia": "BUENAVISTA 22 3"
+    },
+    "ES0021000007518742GQ": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2",
+        "cuenta": "6281444", 
+        "direccion_referencia": "BUENAVISTA 22 2"
+    },
+    "ES0021000007518718AS": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 BJ 2",
+        "cuenta": "6282000",
+        "direccion_referencia": "BUENAVISTA 22 BJ 2"
+    },
+    "ES0021000007518752MA": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 4",
+        "cuenta": "6281555",
+        "direccion_referencia": "BUENAVISTA 22 4"
+    },
+    "ES0021000007518728GW": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2 BAJO B",
+        "cuenta": "6281333",
+        "direccion_referencia": "BUENAVISTA 22 2 BAJO B"
+    },
+    # Añadir otros CUPS según aparezcan en las facturas
+    "CUPS_BAJO_A": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 2 BAJO A",
+        "cuenta": "6281111",
+        "direccion_referencia": "BUENAVISTA 22 2 BAJO A"
+    },
+    "CUPS_1_BAJO": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 1 BAJO",
+        "cuenta": "6281222", 
+        "direccion_referencia": "BUENAVISTA 22 1 BAJO"
+    },
+    "CUPS_3_BAJO_A": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3 BAJO A",
+        "cuenta": "6282111",
+        "direccion_referencia": "BUENAVISTA 22 3 BAJO A"
+    },
+    "CUPS_3_BAJO": {
+        "comunidad": "COPROPIETARIOS RONDA BUENAVISTA 22 3 BAJO", 
+        "cuenta": "6281999",
+        "direccion_referencia": "BUENAVISTA 22 3 BAJO"
+    }
+}
+
+# Aplicar mappings por defecto si no existen secretos
+if not SECRET_MAPEO_CUENTAS:
+    MAPEO_CUENTAS_CONTABLES.update(MAPEO_BUENAVISTA_DEFAULT)
+
 if SECRET_MAPEO_CUENTAS:
     try:
         MAPEO_CUENTAS_CONTABLES.update(SECRET_MAPEO_CUENTAS)
@@ -192,15 +252,45 @@ def detectar_tipo_gasto(texto, filename=None):
     return 'Otros'
 
 def detectar_cups_o_contador(texto):
+    """Detecta CUPS o contador en el texto"""
     if not texto:
         return None
+    
+    # 1. Buscar CUPS estándar (ES + 16-20 caracteres)
     m = re.search(r'(ES[0-9A-Z]{16,20})', texto, re.IGNORECASE)
     if m:
         return m.group(1).upper()
-    # buscar claves en los mappings secretos
+    
+    # 2. Buscar códigos numéricos específicos de facturas (como los de Buenavista)
+    # Patrones para códigos de 10 dígitos como 0039889075, 0016633368, etc.
+    m_codigo = re.search(r'\b(0\d{9})\b', texto)
+    if m_codigo:
+        return m_codigo.group(1)
+    
+    # 3. Buscar códigos sin cero inicial pero de 9-10 dígitos
+    m_codigo2 = re.search(r'\b(\d{9,10})\b', texto)
+    if m_codigo2:
+        codigo = m_codigo2.group(1)
+        # Verificar si está en nuestro mapeo
+        if codigo in MAPEO_CUENTAS_CONTABLES:
+            return codigo
+    
+    # 4. Buscar claves específicas en los mappings secretos
     for k in MAPEO_CUENTAS_CONTABLES.keys():
         if k.upper() in texto.upper():
             return k
+    
+    # 5. Buscar en patrones específicos de facturas de luz
+    # Buscar después de "CUPS:" o "Código CUPS:"
+    m_cups = re.search(r'CUPS[:\s]*([A-Z0-9]{10,20})', texto.upper())
+    if m_cups:
+        return m_cups.group(1)
+    
+    # 6. Buscar números de contrato o referencia
+    m_contrato = re.search(r'(?:CONTRATO|REFERENCIA)[:\s]*([A-Z0-9]{8,15})', texto.upper())
+    if m_contrato:
+        return m_contrato.group(1)
+    
     return None
 
 def detectar_direccion(texto):
@@ -417,22 +507,81 @@ def detectar_comunidad_factura(texto, tipo_gasto):
     return None
 
 def asignar_cuenta_contable_con_tipos(cups_o_contador, direccion, tipo_gasto):
+    """Asigna cuenta contable basada en CUPS/contador, dirección y tipo de gasto"""
+    
     # 1. Buscar por CUPS/contador primero
     if cups_o_contador and cups_o_contador in MAPEO_CUENTAS_CONTABLES:
         entry = MAPEO_CUENTAS_CONTABLES[cups_o_contador]
         return entry.get('comunidad', 'No detectada'), entry.get('cuenta', '628')
     
-    # 2. Buscar por dirección específica
-    if direccion:
-        for entry in MAPEO_CUENTAS_CONTABLES.values():
-            if entry.get('direccion_referencia', '').upper() in direccion.upper():
+    # 2. Buscar por dirección específica usando el mapeo de direcciones por tipo
+    if direccion and tipo_gasto:
+        # Buscar coincidencia exacta primero
+        clave_direccion = (tipo_gasto, direccion)
+        if clave_direccion in DIRECCIONES_POR_TIPO:
+            entry = DIRECCIONES_POR_TIPO[clave_direccion]
+            return entry.get('comunidad', 'No detectada'), entry.get('cuenta', '628')
+        
+        # Buscar coincidencias parciales en direcciones
+        direccion_upper = direccion.upper()
+        for (tipo_map, dir_map), entry in DIRECCIONES_POR_TIPO.items():
+            if tipo_map == tipo_gasto and dir_map.upper() in direccion_upper:
                 return entry.get('comunidad', 'No detectada'), entry.get('cuenta', '628')
     
-    # 3. Fallback por tipo
+    # 3. Buscar por dirección en el mapeo principal (fallback)
+    if direccion:
+        direccion_upper = direccion.upper()
+        for entry in MAPEO_CUENTAS_CONTABLES.values():
+            direccion_ref = entry.get('direccion_referencia', '').upper()
+            if direccion_ref and direccion_ref in direccion_upper:
+                return entry.get('comunidad', 'No detectada'), entry.get('cuenta', '628')
+    
+    # 4. Detección especial para Buenavista basada en texto de dirección
+    if direccion:
+        direccion_upper = direccion.upper()
+        
+        # Patrones específicos de Buenavista
+        if 'BUENAVISTA' in direccion_upper or 'COPROPIETARIOS RONDA BUENAVISTA' in direccion_upper:
+            # Intentar extraer número específico
+            numero_match = re.search(r'BUENAVISTA\s+22\s+(\d+)\s*(BAJO\s*[AB]?)?', direccion_upper)
+            if numero_match:
+                numero = numero_match.group(1)
+                bajo = numero_match.group(2)
+                
+                if bajo:
+                    if 'A' in bajo:
+                        if numero == '2':
+                            return 'BUENAVISTA 22 2 Bajo A', '6281111'
+                        elif numero == '3':
+                            return 'BUENAVISTA 22 3 Bajo A', '6282111'
+                    elif 'B' in bajo:
+                        if numero == '2':
+                            return 'BUENAVISTA 22 2 Bajo B', '6281333'
+                    else:  # Solo "BAJO"
+                        if numero == '1':
+                            return 'BUENAVISTA 22 1 Bajo', '6281222'
+                        elif numero == '3':
+                            return 'BUENAVISTA 22 3 Bajo', '6281999'
+                else:
+                    # Sin "bajo"
+                    if numero == '1':
+                        return 'BUENAVISTA 22 1', '6281777'
+                    elif numero == '2':
+                        return 'BUENAVISTA 22 2', '6281444'
+                    elif numero == '3':
+                        return 'BUENAVISTA 22 3', '6281666'
+                    elif numero == '4':
+                        return 'BUENASVISTA 22 4', '6281555'
+            
+            # Fallback para Buenavista genérico
+            return 'BUENAVISTA 22', '6281444'
+    
+    # 5. Fallback por tipo
     if tipo_gasto == 'Agua':
         return 'COMUNIDAD AGUA', '6281111'
-    if tipo_gasto == 'Luz':
+    if tipo_gasto == 'Luz' or tipo_gasto == 'Electricidad':
         return 'COMUNIDAD LUZ', '6282222'
+    
     return 'COMUNIDAD GENERAL', '628'
 
 def generar_nombre_archivo(fecha, proveedor, importe, numero_factura=None):
