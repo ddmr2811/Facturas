@@ -51,6 +51,54 @@ def utility_processor():
         return datetime.now()
     return dict(now=now)
 
+# ========================================
+# PROTECCIÓN CONTRA INDEXACIÓN
+# ========================================
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Bloquear indexación de buscadores"""
+    response = app.response_class(
+        response="""User-agent: *
+Disallow: /
+Crawl-delay: 86400
+
+# Bloquear sitemap
+Sitemap:
+""",
+        status=200,
+        mimetype='text/plain'
+    )
+    return response
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Sitemap vacío para evitar indexación"""
+    response = app.response_class(
+        response="""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<!-- Sitemap intencionalmente vacío -->
+</urlset>""",
+        status=200,
+        mimetype='application/xml'
+    )
+    return response
+
+@app.after_request
+def add_security_headers(response):
+    """Añadir headers de seguridad y anti-indexación"""
+    # Evitar indexación
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive, nosnippet'
+    # Headers de seguridad
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # Cache control para contenido sensible
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 # Datos en memoria (vacío por defecto). Se llenarán al subir PDFs con datos reales extraídos.
 FACTURAS_DATA = []
 
