@@ -363,14 +363,16 @@ def detectar_comunidad_factura(texto, tipo_gasto):
     if not texto:
         return None
     
-    # Para facturas de agua: buscar después de "Dirección fiscal:"
+    # Para facturas de agua: buscar después de "Dir. Suministro:"
     if tipo_gasto and tipo_gasto.lower() == 'agua':
-        m_direccion_fiscal = re.search(r'Dirección\s+fiscal[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
-        if m_direccion_fiscal:
-            comunidad = m_direccion_fiscal.group(1).strip()
+        m_dir_suministro = re.search(r'Dir\.?\s*Suministro[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
+        if m_dir_suministro:
+            comunidad = m_dir_suministro.group(1).strip()
             # Limpiar y eliminar "COM PROP" y similares
             comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
             comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            # Limpiar guiones y comas al final, y espacios múltiples
+            comunidad = re.sub(r'[\s,\-]+$', '', comunidad)
             comunidad = re.sub(r'\s+', ' ', comunidad).strip()
             return comunidad if comunidad else None
     
@@ -382,6 +384,21 @@ def detectar_comunidad_factura(texto, tipo_gasto):
             # Limpiar y eliminar "COM PROP" y similares
             comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
             comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            # Limpiar guiones y comas al final, y espacios múltiples
+            comunidad = re.sub(r'[\s,\-]+$', '', comunidad)
+            comunidad = re.sub(r'\s+', ' ', comunidad).strip()
+            return comunidad if comunidad else None
+    
+    # Para facturas de luz también: buscar después de "Nombre/Razón social:"
+    elif tipo_gasto and tipo_gasto.lower() == 'luz':
+        m_nombre_razon = re.search(r'Nombre[/\s]*Razón\s+social[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
+        if m_nombre_razon:
+            comunidad = m_nombre_razon.group(1).strip()
+            # Limpiar y eliminar "COM PROP" y similares
+            comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            # Limpiar guiones y comas al final, y espacios múltiples
+            comunidad = re.sub(r'[\s,\-]+$', '', comunidad)
             comunidad = re.sub(r'\s+', ' ', comunidad).strip()
             return comunidad if comunidad else None
     
