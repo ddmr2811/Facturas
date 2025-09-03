@@ -133,96 +133,71 @@ def create_default_users():
 # Datos de facturas (simulado)
 FACTURAS_DATA = []
 
-# Cargar mappings secretos desde secret_mappings.py o desde variables de entorno
+# Cargar mappings secretos desde múltiples fuentes
 MAPEO_CUENTAS_CONTABLES = {}
 DIRECCIONES_POR_TIPO = {}
 CODIGOS_AGUA_DISPONIBLES = {}
 
-try:
-    from secret_mappings import (
-        MAPEO_CUENTAS_CONTABLES, 
-        DIRECCIONES_POR_TIPO, 
-        CODIGOS_AGUA_DISPONIBLES
-    )
-    print("✅ Mapeos sensibles cargados desde secret_mappings.py")
-except ImportError:
-    print("⚠️ No se encontró secret_mappings.py, intentando cargar desde variables de entorno...")
-    # Intentar cargar desde variable de entorno JSON (más seguro para deploys)
-    import json
-    sm_json = os.environ.get('SECRET_MAPPINGS_JSON')
-    # Soporte para plataformas que no permiten multiline env vars: JSON en base64
-    sm_json_b64 = os.environ.get('SECRET_MAPPINGS_JSON_BASE64')
-    if not sm_json and sm_json_b64:
-        try:
-            import base64 as _b64
-            sm_json = _b64.b64decode(sm_json_b64).decode('utf-8')
-            print('✅ SECRET_MAPPINGS_JSON cargado desde SECRET_MAPPINGS_JSON_BASE64 (decodificado)')
-        except Exception as _e:
-            print(f'❌ Error decodificando SECRET_MAPPINGS_JSON_BASE64: {_e}')
-    sm_path = os.environ.get('SECRET_MAPPINGS_PATH')
-    loaded = False
-    if sm_json:
-        try:
-            data = json.loads(sm_json)
-            MAPEO_CUENTAS_CONTABLES = data.get('MAPEO_CUENTAS_CONTABLES', {}) or {}
-            DIRECCIONES_POR_TIPO = data.get('DIRECCIONES_POR_TIPO', {}) or {}
-            CODIGOS_AGUA_DISPONIBLES = data.get('CODIGOS_AGUA_DISPONIBLES', {}) or {}
-            print('✅ Mapeos sensibles cargados desde SECRET_MAPPINGS_JSON')
-            loaded = True
-        except Exception as e:
-            print(f"❌ Error parseando SECRET_MAPPINGS_JSON: {e}")
+def load_mapeo_config():
+    """Carga la configuración sensible desde archivo JSON en /app/config/mapeo_sensible.json
 
-    # Si no había JSON, intentar leer un fichero con path dado (por ejemplo en el server)
-    if not loaded and sm_path and os.path.exists(sm_path):
-        try:
-            with open(sm_path, 'r', encoding='utf-8') as f:
+    Esta versión prioriza la carga desde un JSON montado en /app/config. Si no está
+    presente, devuelve mapeos vacíos.
+    """
+    config_path = '/app/config/mapeo_sensible.json'
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            MAPEO_CUENTAS_CONTABLES = data.get('MAPEO_CUENTAS_CONTABLES', {}) or {}
-            DIRECCIONES_POR_TIPO = data.get('DIRECCIONES_POR_TIPO', {}) or {}
-            CODIGOS_AGUA_DISPONIBLES = data.get('CODIGOS_AGUA_DISPONIBLES', {}) or {}
-            print(f"✅ Mapeos sensibles cargados desde archivo: {sm_path}")
-            loaded = True
-        except Exception as e:
-            print(f"❌ Error leyendo SECRET_MAPPINGS_PATH: {e}")
 
-    if not loaded:
-        print("⚠️ No se cargaron mapeos sensibles; usando mapeos vacíos por seguridad")
-
-# Si DIRECCIONES_POR_TIPO fue cargado desde JSON, sus claves podrían ser strings
-# Normalizamos claves como "Tipo|Direccion" o "Tipo|||Direccion" -> tupla (Tipo, Direccion)
-def _normalize_direcciones_map(dmap):
-    if not isinstance(dmap, dict):
-        return dmap
-    newmap = {}
-    for k, v in dmap.items():
-        # Si ya es una tupla (posible cuando viene de secret_mappings.py), mantener
-        if isinstance(k, (list, tuple)):
-            key = (k[0], k[1])
-        elif isinstance(k, str):
-            if '|||' in k:
-                tipo, direccion = k.split('|||', 1)
-            elif '|' in k:
-                tipo, direccion = k.split('|', 1)
-            else:
-                # no se puede normalizar; intentar dejar como estaba
-                # intentar parsear si el valor tiene campos tipo/direccion
-                if isinstance(v, dict) and 'tipo' in v and 'direccion' in v:
-                    tipo = v.get('tipo')
-                    direccion = v.get('direccion')
+            # Convertir direcciones_por_tipo de vuelta a tuplas
+            direcciones_tuplas = {}
+            for key, value in data.get('direcciones_por_tipo', {}).items():
+                if isinstance(key, str) and ',' in key:
+                    tipo, direccion = key.split(',', 1)
+                    direcciones_tuplas[(tipo, direccion)] = value
                 else:
-                    # ignorar clave no normalizable
-                    continue
-            key = (tipo, direccion)
-        else:
-            continue
-        newmap[key] = v
-    return newmap
+                    # Si la clave no contiene coma, usarla tal cual
+                    direcciones_tuplas[key] = value
 
-# Aplicar normalización si es necesario
+            print("✅ Configuración secreta cargada desde JSON")
+            return {
+                'MAPEO_CUENTAS_CONTABLES': data.get('mapeo_cuentas_contables', {}),
+                'DIRECCIONES_POR_TIPO': direcciones_tuplas,
+                'CODIGOS_AGUA_DISPONIBLES': data.get('codigos_agua_disponibles', [])
+            }
+        else:
+            print(f"⚠️ No se encontró el archivo de configuración en {config_path}")
+            return {
+                'MAPEO_CUENTAS_CONTABLES': {},
+                'DIRECCIONES_POR_TIPO': {},
+                'CODIGOS_AGUA_DISPONIBLES': []
+            }
+    except Exception as e:
+        print(f"❌ Error cargando configuración: {e}")
+        return {
+            'MAPEO_CUENTAS_CONTABLES': {},
+            'DIRECCIONES_POR_TIPO': {},
+            'CODIGOS_AGUA_DISPONIBLES': []
+        }
+
+# Cargar configuración al inicio
 try:
-    DIRECCIONES_POR_TIPO = _normalize_direcciones_map(DIRECCIONES_POR_TIPO)
-except Exception:
-    pass
+    config = load_mapeo_config()
+    MAPEO_CUENTAS_CONTABLES = config['MAPEO_CUENTAS_CONTABLES']
+    DIRECCIONES_POR_TIPO = config['DIRECCIONES_POR_TIPO']
+    CODIGOS_AGUA_DISPONIBLES = config['CODIGOS_AGUA_DISPONIBLES']
+    
+    print(f"📊 Configuración final cargada:")
+    print(f"   - CUPS/Contadores: {len(MAPEO_CUENTAS_CONTABLES)} entradas")
+    print(f"   - Direcciones por tipo: {len(DIRECCIONES_POR_TIPO)} entradas")
+    print(f"   - Códigos agua: {len(CODIGOS_AGUA_DISPONIBLES)} entradas")
+    
+except Exception as e:
+    print(f"❌ Error crítico cargando configuración: {e}")
+    MAPEO_CUENTAS_CONTABLES = {}
+    DIRECCIONES_POR_TIPO = {}
+    CODIGOS_AGUA_DISPONIBLES = {}
 
 # Utilidades de detección
 def _normalize_dir_key(s):
