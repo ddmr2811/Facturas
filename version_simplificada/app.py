@@ -952,114 +952,59 @@ def toggle_procesado(id_factura):
 @login_required
 def pdf_preview(filename):
     """Genera y devuelve una vista previa de una página de un archivo PDF"""
-    page = request.args.get('page', 1, type=int)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if not os.path.exists(filepath):
-        return jsonify({"success": False, "error": "Archivo no encontrado"}), 404
-    
-    # Si no hay librerías para procesar PDFs, devolver imagen de marcador de posición
-    if not PYPDF2_ENABLED or not PIL_ENABLED:
-        # Devolver imagen simulada base64 como marcador de posición
-        placeholder_base64 = "iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNmlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjarY6xSsNQFEDPi6LiUCsEcXB4kygotupgxqQtRRCs1SHJ1qShSmkSXl7VfoSjWwcXd7/AyVFwUPwC/0Bx6uAQIYODCJ7p3MPlcsGo2HWnYZRhEGvVbjrS9Xw5+8QMUwDQCbPUbrUOAOIkjvjB5ysC4HnTrjsN/sZ8mCoNTIDtbpfdlOvc7Mx7j8QB+uMCyKw3YGdJRyNGNJGU1KBLOLyNYS2aKoNKyHGhjmDuPPaPggZTzYOSTNaBZ2u3IcOHyKHqG6EuJqo6OE8Dz5zRD2oBDGq2yNE/YEJcz7Z+WGE8EV9iVIZEF7B9fKN2z0ooGhOoNlNJjBoKJBE/zB+/KY4aPl3xLCe3nZJhKaJqKYJw8jO3RlCbE+hTHUF8RQOgRQLYJb4RyE1jAwC+MJqEOQZYCeA1kJgAQBHkBcGjHDfSTXOFf7W0gIJ5j8yEJjClFJn3BNJl0Y6JMZjX+OV5aYXAUYSh/JDMQGIY8H4CYXGJ8WFGV5YUHJL2OyInBjCAYe7n+t6sR8/J2y4BkKu8UbIAEH0EQnBJg3FKpgK2vbcF//IjVUaVrXnOe9PsG7Q+LL/e8w8BWE7m4kH/RYXAeJJADJAe6S8AxPsQcNFJUhvAAAABmCaDJFnZBqoJr4YzXGAUzpOPZh8KXJCBOPOFYSIhSGIHUaVCQGxGQJ9P1QUIQhCEyQFJBSJCUBCC0wSjJoqTULEJEE7g2W5y0o3jQOcbORNREJKQ9mW1fYtLt0YKJ6a5xvNMdT2CZqOgojOr7nQxJkx+K5dRJZiHQJk2V8+kBRU7jXo5WVqrAC5OWf7fB9pJXx3vGNNJdnrGCIQpjIXfJLRJRrXoNQlYd"
-        
-        return jsonify({
-            "success": True, 
-            "imageData": f"data:image/png;base64,{placeholder_base64}",
-            "currentPage": 1,
-            "totalPages": 1,
-            "limitedPreview": True,
-            "message": "Para ver la vista previa del PDF, instala las dependencias necesarias: pip install PyPDF2 pillow pdf2image"
-        })
-    
     try:
-        # Crear un marcador de posición básico que muestra información del archivo
-        total_pages = 1  # Valor predeterminado
+        page = request.args.get('page', 1, type=int)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
-        # Intentar obtener el número de páginas si PyPDF2 está disponible
+        if not os.path.exists(filepath):
+            return jsonify({"success": False, "error": "Archivo no encontrado"}), 404
+        
+        # Si no hay librerías para procesar PDFs, devolver imagen de marcador de posición
+        if not PDF_PREVIEW_ENABLED:
+            return jsonify({
+                "success": True, 
+                "imageData": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMDAiIHZpZXdCb3g9IjAgMCA4MDAgMTAwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSIxMDAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjQwMCIgeT0iNTAwIiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCI+VmlzdGEgcHJldmlhIG5vIGRpc3BvbmlibGU8L3RleHQ+Cjx0ZXh0IHg9IjQwMCIgeT0iNTQwIiBmaWxsPSIjNjM3Mzg1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+SW5zdGFsZSBwZGYyaW1hZ2UgcGFyYSB2ZXIgUERGczwvdGV4dD4KPC9zdmc+",
+                "currentPage": 1,
+                "totalPages": 1,
+                "limitedPreview": True,
+                "message": "Para ver la vista previa del PDF, instala: pip install pdf2image"
+            })
+        
+        # Obtener número total de páginas
+        total_pages = 1
         if PYPDF2_ENABLED:
             try:
                 with open(filepath, 'rb') as pdf_file:
                     pdf_reader = PyPDF2.PdfReader(pdf_file)
                     total_pages = len(pdf_reader.pages)
             except Exception as e:
-                print(f"Error al leer el PDF: {str(e)}")
+                print(f"Error al obtener páginas: {e}")
         
-        # Generar vista previa
-        if PDF_PREVIEW_ENABLED:
-            try:
-                # Convertir la página del PDF a imagen usando pdf2image
-                images = convert_from_path(filepath, first_page=page, last_page=page)
-                if images:
-                    img_io = BytesIO()
-                    images[0].save(img_io, 'JPEG', quality=85)
-                    img_io.seek(0)
-                    
-                    # Convertir la imagen a base64 para enviarla como JSON
-                    encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
-                    
-                    return jsonify({
-                        "success": True, 
-                        "imageData": f"data:image/jpeg;base64,{encoded}",
-                        "currentPage": page,
-                        "totalPages": total_pages
-                    })
-            except Exception as e:
-                print(f"Error con pdf2image: {str(e)}")
-                # Si falla pdf2image, intentar método alternativo con PIL
-                pass
-        elif PIL_ENABLED:
-            # Método alternativo si pdf2image no está disponible pero Pillow sí
-            img = Image.new('RGB', (800, 1000), color='white')
-            draw = ImageDraw.Draw(img)
-            try:
-                font = ImageFont.truetype("arial.ttf", 30)
-            except IOError:
-                font = ImageFont.load_default()
-            
-            # Obtener texto de la página si es posible
-            page_text = f"Vista previa del archivo: {filename}\nPágina {page} de {total_pages}"
-            
-            if PYPDF2_ENABLED and page <= total_pages:
-                try:
-                    with open(filepath, 'rb') as pdf_file:
-                        pdf_reader = PyPDF2.PdfReader(pdf_file)
-                        extracted_text = pdf_reader.pages[page-1].extract_text()
-                        if extracted_text:
-                            # Mostrar las primeras líneas
-                            lines = extracted_text.split('\n')[:15]
-                            page_text += "\n\n" + '\n'.join(lines)
-                except Exception as e:
-                    page_text += f"\n\nError al extraer texto: {str(e)}"
-            
-            draw.text((50, 50), page_text, fill='black', font=font)
-            
-            img_io = BytesIO()
-            img.save(img_io, 'JPEG', quality=85)
-            img_io.seek(0)
-            
-            encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
-            
-            return jsonify({
-                "success": True, 
-                "imageData": f"data:image/jpeg;base64,{encoded}",
-                "currentPage": page,
-                "totalPages": total_pages,
-                "limitedPreview": True
-            })
-        else:
-            # No hay librerías disponibles para generar vista previa
-            return jsonify({
-                "success": True, 
-                "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNmlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjarY6xSsNQFEDPi6LiUCsEcXB4kygotupgxqQtRRCs1SHJ1qShSmkSXl7VfoSjWwcXd7/AyVFwUPwC/0Bx6uAQIYODCJ7p3MPlcsGo2HWnYZRhEGvVbjrS9Xw5+8QMUwDQCbPUbrUOAOIkjvjB5ysC4HnTrjsN/sZ8m",
-                "currentPage": page,
-                "totalPages": total_pages,
-                "limitedPreview": True,
-                "message": "Vista previa no disponible. Instale las dependencias necesarias."
-            })
-            
+        # Convertir página a imagen
+        images = convert_from_path(filepath, first_page=page, last_page=page, dpi=150)
+        if not images:
+            raise Exception("No se pudo convertir la página del PDF")
+        
+        # Convertir a base64
+        img_io = BytesIO()
+        images[0].save(img_io, 'JPEG', quality=85)
+        img_io.seek(0)
+        
+        encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
+        
+        return jsonify({
+            "success": True, 
+            "imageData": f"data:image/jpeg;base64,{encoded}",
+            "currentPage": page,
+            "totalPages": total_pages
+        })
+        
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        print(f"Error en pdf_preview: {str(e)}")
+        return jsonify({
+            "success": False, 
+            "error": f"Error al cargar la vista previa: {str(e)}"
+        }), 500
 
 # ========================================
 # RUTAS DE DESCARGA
