@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  facturas-app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  uploads_data:

@@ -1,0 +1,12 @@
+*.pdf
+*.pyc
+__pycache__/
+.git/
+.gitignore
+venv/
+env/
+.env
+node_modules/
+.DS_Store
+Thumbs.db
+uploads/*.pdf

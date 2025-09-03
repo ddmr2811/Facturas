@@ -39,9 +39,19 @@ Para desplegar esta aplicación en Dokploy:
 
 1. Sube estos archivos a tu repositorio Git
 2. Crea un nuevo servicio en Dokploy usando este repositorio
-3. La aplicación usará automáticamente el archivo `Procfile` incluido
+3. Configura las variables de entorno:
+   - `PORT=5000`
+   - `FLASK_ENV=production`
+   - `FLASK_DEBUG=false`
+4. Usa el puerto 5000
+5. Build path: `/version_simplificada`
 
-No se requiere configuración adicional de base de datos o variables de entorno.
+La aplicación usará automáticamente Docker para el despliegue.
+
+### Variables de entorno disponibles:
+- `PORT`: Puerto del servidor (por defecto: 5000)
+- `FLASK_DEBUG`: Modo debug (por defecto: False)
+- `FLASK_ENV`: Entorno de Flask (por defecto: production)
 
 ## Uso de la Aplicación
 

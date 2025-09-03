@@ -5,3 +5,4 @@ python-dotenv==1.0.0
 pillow==9.5.0  # Para procesamiento de imágenes
 PyPDF2==3.0.1  # Para leer archivos PDF
 pdf2image==1.16.3  # Para convertir PDF a imágenes
+gunicorn==21.2.0  # Para producción
