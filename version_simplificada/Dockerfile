@@ -4,9 +4,10 @@ FROM python:3.11-slim
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Instalar dependencias del sistema para PyPDF2 y otras librerías
+# Instalar dependencias del sistema para PyPDF2, pdf2image y poppler
 RUN apt-get update && apt-get install -y \
     gcc \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements

@@ -917,22 +917,27 @@ def pdf_preview(filename):
         
         # Generar vista previa
         if PDF_PREVIEW_ENABLED:
-            # Convertir la página del PDF a imagen usando pdf2image
-            images = convert_from_path(filepath, first_page=page, last_page=page)
-            if images:
-                img_io = BytesIO()
-                images[0].save(img_io, 'JPEG', quality=85)
-                img_io.seek(0)
-                
-                # Convertir la imagen a base64 para enviarla como JSON
-                encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
-                
-                return jsonify({
-                    "success": True, 
-                    "imageData": f"data:image/jpeg;base64,{encoded}",
-                    "currentPage": page,
-                    "totalPages": total_pages
-                })
+            try:
+                # Convertir la página del PDF a imagen usando pdf2image
+                images = convert_from_path(filepath, first_page=page, last_page=page)
+                if images:
+                    img_io = BytesIO()
+                    images[0].save(img_io, 'JPEG', quality=85)
+                    img_io.seek(0)
+                    
+                    # Convertir la imagen a base64 para enviarla como JSON
+                    encoded = base64.b64encode(img_io.getvalue()).decode('utf-8')
+                    
+                    return jsonify({
+                        "success": True, 
+                        "imageData": f"data:image/jpeg;base64,{encoded}",
+                        "currentPage": page,
+                        "totalPages": total_pages
+                    })
+            except Exception as e:
+                print(f"Error con pdf2image: {str(e)}")
+                # Si falla pdf2image, intentar método alternativo con PIL
+                pass
         elif PIL_ENABLED:
             # Método alternativo si pdf2image no está disponible pero Pillow sí
             img = Image.new('RGB', (800, 1000), color='white')
