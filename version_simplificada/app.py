@@ -215,7 +215,22 @@ def detectar_direccion(texto):
     if not texto:
         return None
     
-    # Buscar "Dir. Suministro:" específicamente para facturas de agua
+    # 1. Buscar "Dirección de suministro:" (para facturas de luz)
+    m_dir_suministro = re.search(r'Direcci[óo]n\s+de\s+suministro[:\s]*([^,\n\r]+)', texto, re.IGNORECASE)
+    if m_dir_suministro:
+        direccion = m_dir_suministro.group(1).strip()
+        # Limpiar la dirección
+        direccion = re.sub(r'\s+', ' ', direccion)
+        # Remover ciudad y código postal del final
+        direccion = re.sub(r',?\s*TOLEDO.*$', '', direccion, flags=re.IGNORECASE)
+        direccion = re.sub(r',?\s*\d{5}.*$', '', direccion)
+        # Arreglar espacios raros como "BAJ O A" -> "BAJO A"
+        direccion = re.sub(r'BAJ\s+O\s+A', 'BAJO A', direccion, flags=re.IGNORECASE)
+        direccion = re.sub(r'BAJ\s+O\s+B', 'BAJO B', direccion, flags=re.IGNORECASE)
+        direccion = re.sub(r'BAJ\s+O', 'BAJO', direccion, flags=re.IGNORECASE)
+        return direccion.strip()
+    
+    # 2. Buscar "Dir. Suministro:" (formato corto)
     m_suministro = re.search(r'Dir\.?\s*Suministro[:\s]*([^,\-/\n\r]+)', texto, re.IGNORECASE)
     if m_suministro:
         direccion = m_suministro.group(1).strip()
@@ -223,7 +238,7 @@ def detectar_direccion(texto):
         direccion = re.sub(r'\s+', ' ', direccion)
         return direccion
     
-    # Buscar direcciones genéricas en mappings primero
+    # 3. Buscar direcciones genéricas en mappings primero
     for v in MAPEO_CUENTAS_CONTABLES.values():
         dirref = v.get('direccion_referencia', '')
         if dirref and dirref.upper() in texto.upper():
@@ -1255,13 +1270,24 @@ def descargar_html(nombre_factura):
         return f"Archivo original no encontrado: {archivo_original}", 404
     
     try:
-        # Limpiar el nombre para la descarga
-        nombre_limpio = re.sub(r'[<>:"/\\|?*]', '_', nombre_decodificado)
+        # Usar el nombre renombrado como nombre de descarga
+        nombre_descarga = factura.get("archivo_procesado", nombre_decodificado)
+        
+        # Asegurar que tenga extensión .pdf
+        if not nombre_descarga.lower().endswith('.pdf'):
+            nombre_descarga += '.pdf'
+        
+        # Limpiar caracteres problemáticos para el sistema de archivos
+        nombre_descarga = re.sub(r'[<>:"/\\|?*]', '_', nombre_descarga)
+        # Limpiar espacios múltiples
+        nombre_descarga = re.sub(r'\s+', ' ', nombre_descarga)
+        
+        print(f"Descargando: {archivo_original} como {nombre_descarga}")
         
         return send_file(
             ruta_original,
             as_attachment=True,
-            download_name=nombre_limpio,
+            download_name=nombre_descarga,
             mimetype='application/pdf'
         )
     except Exception as e:
