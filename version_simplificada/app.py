@@ -39,7 +39,7 @@ except ImportError:
 
 # Configuración de Flask
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'clave_super_secreta_para_facturas_2025'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_super_secreta_para_facturas_2025_desarrollo')
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB límite de subida de archivos
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
@@ -87,17 +87,17 @@ def create_default_users():
     users_data = [
         {
             'username': 'Dani', 
-            'email': 'dani@carroblesabogados.com', 
+            'email': 'admin@carroblesabogados.com', 
             'password': os.environ.get('DANI_PASSWORD', 'DefaultDani123!')
         },
         {
             'username': 'Patricia', 
-            'email': 'patricia@carroblesabogados.com', 
+            'email': 'gestion@carroblesabogados.com', 
             'password': os.environ.get('PATRICIA_PASSWORD', 'DefaultPatricia123!')
         },
         {
             'username': 'Javier', 
-            'email': 'javier@carroblesabogados.com', 
+            'email': 'direccion@carroblesabogados.com', 
             'password': os.environ.get('JAVIER_PASSWORD', 'DefaultJavier123!')
         }
     ]

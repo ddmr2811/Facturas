@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -18,102 +18,93 @@
         
         .login-container {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
+            margin: 0 20px;
         }
         
         .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
-            padding: 2rem;
+            padding: 2.5rem 2rem;
             text-align: center;
         }
         
         .login-header img {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             margin-bottom: 1rem;
-            border-radius: 10px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
         }
         
         .login-body {
-            padding: 2rem;
+            padding: 2.5rem 2rem;
+        }
+        
+        .form-floating {
+            margin-bottom: 1.5rem;
         }
         
         .form-control {
             border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
+            border-radius: 12px;
+            padding: 1rem 1rem;
+            font-size: 1rem;
+            height: auto;
+            transition: all 0.3s ease;
         }
         
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        .form-floating > label {
+            color: #6c757d;
+            font-weight: 500;
         }
         
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             border: none;
-            border-radius: 10px;
-            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            padding: 1rem 2rem;
             font-weight: 600;
+            font-size: 1.1rem;
             width: 100%;
             color: white;
             transition: all 0.3s ease;
+            margin-top: 1rem;
         }
         
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
             color: white;
+            background: linear-gradient(135deg, #218838 0%, #1fa187 100%);
         }
         
         .alert {
-            border-radius: 10px;
+            border-radius: 12px;
             border: none;
+            margin-bottom: 1.5rem;
         }
         
-        .input-group-text {
-            background: transparent;
-            border: 2px solid #e9ecef;
-            border-right: none;
-            border-radius: 10px 0 0 10px;
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border-left: 4px solid #28a745;
         }
         
-        .input-group .form-control {
-            border-left: none;
-            border-radius: 0 10px 10px 0;
-        }
-        
-        .input-group:focus-within .input-group-text {
-            border-color: #667eea;
-        }
-        
-        .demo-users {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-        }
-        
-        .demo-users h6 {
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-        
-        .demo-users ul {
-            margin-bottom: 0;
-            padding-left: 1rem;
-        }
-        
-        .demo-users li {
-            color: #6c757d;
-            margin-bottom: 0.25rem;
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
         }
     </style>
 </head>
@@ -139,18 +130,18 @@
             {% endwith %}
             
             <form method="POST">
-                <div class="input-group mb-3">
-                    <span class="input-group-text">
-                        <i class="fas fa-user text-muted"></i>
-                    </span>
-                    <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+                <div class="form-floating mb-3">
+                    <input type="text" name="username" class="form-control" id="floatingUsername" placeholder="Usuario" required>
+                    <label for="floatingUsername">
+                        <i class="fas fa-user me-2 text-success"></i>Usuario
+                    </label>
                 </div>
                 
-                <div class="input-group mb-4">
-                    <span class="input-group-text">
-                        <i class="fas fa-lock text-muted"></i>
-                    </span>
-                    <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                <div class="form-floating mb-4">
+                    <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Contraseña" required>
+                    <label for="floatingPassword">
+                        <i class="fas fa-lock me-2 text-success"></i>Contraseña
+                    </label>
                 </div>
                 
                 <button type="submit" class="btn btn-login">
@@ -158,19 +149,6 @@
                     Iniciar Sesión
                 </button>
             </form>
-            
-            <div class="demo-users">
-                <h6><i class="fas fa-info-circle me-1"></i> Usuarios disponibles:</h6>
-                <ul>
-                    <li><strong>admin</strong> - Administrador del sistema</li>
-                    <li><strong>gestor</strong> - Gestor de facturas</li>
-                    <li><strong>contador</strong> - Contador</li>
-                </ul>
-                <small class="text-muted">
-                    <i class="fas fa-shield-alt me-1"></i>
-                    Sistema protegido - Solo usuarios autorizados
-                </small>
-            </div>
         </div>
     </div>
     
