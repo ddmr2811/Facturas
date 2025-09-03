@@ -1,0 +1,472 @@
+/* Estilos generales - Diseño minimalista empresarial */
+:root {
+    --primary-color: #2E7D32;  /* Verde empresarial del footer */
+    --primary-light: #4CAF50;
+    --primary-dark: #1B5E20;
+    --secondary-color: #66BB6A;
+    --accent-color: #E8F5E8;
+    --text-light: #ffffff;
+    --text-dark: #263238;
+    --text-muted: #607D8B;
+    --border-color: #E0E0E0;
+    --header-bg: #2E7D32;
+    --footer-bg: #2E7D32;
+    --card-bg: #ffffff;
+    --background-color: #FAFAFA;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Encabezado empresarial minimalista */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: var(--text-light);
+    padding: 20px 0;
+    box-shadow: 0 2px 20px rgba(46, 125, 50, 0.15);
+    border-bottom: 3px solid var(--primary-light);
+}
+
+.app-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1800px;
+    width: 95%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.app-logo {
+    height: 45px;
+    width: auto;
+    filter: brightness(1.1);
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+}
+
+.company-tagline {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
+    margin-top: 2px;
+}
+
+/* Diseño de tarjetas minimalista */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    margin-bottom: 30px;
+    background-color: var(--card-bg);
+    overflow: hidden;
+    width: 100%;
+    max-width: none;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 30px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    color: var(--text-light);
+    border-radius: 0;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 400;
+    font-size: 1.1rem;
+    letter-spacing: 0.3px;
+}
+
+.card-body {
+    padding: 30px;
+    width: 100%;
+}
+
+/* Botones empresariales */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    color: var(--text-light);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-color) 100%);
+    color: var(--text-light);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #E57373 0%, #F44336 100%);
+    color: var(--text-light);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: var(--text-light);
+}
+
+/* Tabla empresarial minimalista */
+.table {
+    font-size: 0.75rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: var(--card-bg);
+    width: 100%;
+    table-layout: auto; /* Cambiado de fixed a auto para responsive */
+    margin: 0;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #F1F8E9 100%);
+    color: var(--text-dark);
+    font-weight: 600;
+    border: none;
+    padding: 12px 6px;
+    text-align: left;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table tbody td {
+    padding: 8px 6px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+    font-size: 0.75rem;
+}
+
+/* Columnas responsive que se adaptan al contenido */
+.table tbody td:nth-child(1), /* Estado */
+.table tbody td:nth-child(2), /* Nombre Original */
+.table tbody td:nth-child(3), /* Nombre Renombrado */
+.table tbody td:nth-child(4), /* CUPS */
+.table tbody td:nth-child(5), /* Dirección */
+.table tbody td:nth-child(6), /* Tipo Gasto */
+.table tbody td:nth-child(7), /* Fecha Factura */
+.table tbody td:nth-child(8), /* Importe Total */
+.table tbody td:nth-child(9), /* Comunidad */
+.table tbody td:nth-child(10), /* Cuenta Contable */
+.table tbody td:nth-child(11), /* Procesado */
+.table tbody td:nth-child(13) { /* Acciones */
+    white-space: nowrap;
+    width: auto;
+}
+
+/* Columna Movimiento Contable - tamaño fijo */
+.table tbody td:nth-child(12) { /* Movimiento Contable */
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Headers también responsive */
+.table thead th {
+    width: auto;
+}
+
+.table thead th:nth-child(12) { /* Header Movimiento Contable */
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+}
+
+/* Nombre renombrado clickeable */
+.table tbody td:nth-child(3) a {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: none !important;
+}
+
+.table tbody td:nth-child(3) a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline !important;
+}
+
+/* Iconos de estado */
+.table tbody td:first-child i {
+    font-size: 1rem;
+}
+
+/* Estilo específico para la columna de movimiento contable */
+.table tbody td pre {
+    font-size: 0.65rem;
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 40px;
+    line-height: 1.2;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: var(--accent-color);
+    transform: scale(1.005);
+}
+
+.table tbody tr:nth-of-type(even) {
+    background-color: rgba(46, 125, 50, 0.02);
+}
+
+/* Área de carga minimalista */
+.upload-area {
+    padding: 30px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.upload-area:hover,
+.upload-area.active {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--accent-color) 0%, #E8F5E8 100%);
+    transform: translateY(-2px);
+}
+
+/* Footer empresarial */
+.app-footer {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    color: var(--text-light);
+    padding: 8px 0;
+    font-size: 0.75rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 100;
+    border-top: 2px solid var(--primary-light);
+}
+
+.app-footer .container {
+    max-width: 1800px;
+    width: 95%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.app-footer p {
+    margin: 0;
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+/* Ajustes generales */
+body {
+    margin-bottom: 45px;
+}
+
+.container-fluid {
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 95%;
+    padding: 0 10px;
+}
+
+/* Iconos */
+.fas, .fa {
+    color: inherit;
+}
+
+/* Responsive empresarial */
+@media (max-width: 768px) {
+    .app-header .container {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        width: 98%;
+    }
+    
+    .container-fluid {
+        width: 98%;
+    }
+    
+    .app-footer .container {
+        width: 98%;
+    }
+    
+    .app-logo {
+        height: 35px;
+    }
+    
+    .app-header h1 {
+        font-size: 1.4rem;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .table {
+        font-size: 0.7rem;
+        table-layout: auto;
+    }
+    
+    .table thead th,
+    .table tbody td {
+        padding: 6px 3px;
+        white-space: normal;
+        font-size: 0.65rem;
+    }
+    
+    .table tbody td pre {
+        font-size: 0.6rem;
+        max-height: 30px;
+    }
+}
+
+/* Estilos adicionales para UX empresarial */
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 25px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+}
+
+/* Efectos de hover mejorados */
+.btn-group .btn {
+    margin: 0 2px;
+    transition: all 0.3s ease;
+}
+
+.btn-group .btn:hover {
+    transform: scale(1.05);
+}
+
+/* Badge y estados */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Progress bars empresariales */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--accent-color);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-light) 100%);
+}
+
+/* Modales empresariales */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    color: var(--text-light);
+    border-radius: 12px 12px 0 0;
+}
+
+/* Toasts empresariales */
+.toast {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Animaciones sutiles */
+.card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estados de carga */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--accent-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}

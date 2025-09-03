@@ -1,0 +1,10 @@
+# Ignorar archivos sensibles de mapeo y datos locales
+secret_mappings.py
+uploads/
+*.db
+*.sqlite
+__pycache__/
+.venv/
+venv/
+*.log
+descargados_*.json
