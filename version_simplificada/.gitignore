@@ -8,3 +8,8 @@ __pycache__/
 venv/
 *.log
 descargados_*.json
+
+# Variables de entorno con datos sensibles
+.env
+.env.local
+.env.production

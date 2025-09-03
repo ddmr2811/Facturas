@@ -83,10 +83,23 @@ def utility_processor():
 
 def create_default_users():
     """Crear los 3 usuarios por defecto si no existen"""
+    # Obtener contraseñas desde variables de entorno o usar defaults para desarrollo
     users_data = [
-        {'username': 'admin', 'email': 'admin@carroblesabogados.com', 'password': 'Admin123!'},
-        {'username': 'gestor', 'email': 'gestor@carroblesabogados.com', 'password': 'Gestor456!'},
-        {'username': 'contador', 'email': 'contador@carroblesabogados.com', 'password': 'Contador789!'}
+        {
+            'username': 'Dani', 
+            'email': 'dani@carroblesabogados.com', 
+            'password': os.environ.get('DANI_PASSWORD', 'DefaultDani123!')
+        },
+        {
+            'username': 'Patricia', 
+            'email': 'patricia@carroblesabogados.com', 
+            'password': os.environ.get('PATRICIA_PASSWORD', 'DefaultPatricia123!')
+        },
+        {
+            'username': 'Javier', 
+            'email': 'javier@carroblesabogados.com', 
+            'password': os.environ.get('JAVIER_PASSWORD', 'DefaultJavier123!')
+        }
     ]
     
     for user_data in users_data:

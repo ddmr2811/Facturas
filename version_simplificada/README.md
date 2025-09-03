@@ -1,33 +1,37 @@
-# Version Simplificada del Procesador de Facturas
+# Procesador de Facturas
 
-Esta es una versión simplificada del Procesador de Facturas, diseñada para ser desplegada rápidamente en producción sin necesidad de base de datos o autenticación.
+Aplicación web para procesamiento automático de facturas con autenticación y gestión de usuarios.
 
-## Características
+## 🚀 Características
 
-- ✅ **Interfaz web completa** similar a la versión original
-- ✅ **Simulación del procesamiento de facturas** con feedback visual
-- ✅ **Reconocimiento automático** del tipo de factura por su nombre
-- ✅ **Generación realista de movimientos contables**
-- ✅ **Visualización y descarga** de facturas
-- ✅ **Sin requisitos de base de datos**
+- ✅ **Autenticación segura** con usuarios personalizables
+- ✅ **Procesamiento de PDFs** con detección automática de datos
+- ✅ **Reconocimiento inteligente** de tipos de factura (Agua, Luz, etc.)
+- ✅ **Visualización en tiempo real** con vista previa de PDFs
+- ✅ **Generación de movimientos contables**
+- ✅ **Descarga y gestión** de archivos procesados
 
-## Requisitos
+## 🔧 Configuración
 
-- Python 3.6 o superior
-- Dependencias listadas en `requirements.txt`
+### Variables de Entorno
 
-## Inicio Rápido
+Para configurar contraseñas seguras, crea las siguientes variables de entorno:
 
-### En Windows:
-Simplemente ejecuta el archivo `iniciar_demo.bat` y la aplicación se iniciará automáticamente.
-
-### En Linux/Mac:
 ```bash
-chmod +x iniciar_demo.sh
-./iniciar_demo.sh
+# Contraseñas de usuarios
+DANI_PASSWORD=tu_contraseña_segura
+PATRICIA_PASSWORD=tu_contraseña_segura  
+JAVIER_PASSWORD=tu_contraseña_segura
+
+# Configuración de la aplicación
+SECRET_KEY=tu_clave_secreta_super_larga
+FLASK_ENV=production
+FLASK_DEBUG=false
 ```
 
-### Manualmente:
+### En Dokploy o Docker
+
+Configura estas variables en tu panel de administración para mantener las contraseñas seguras.
 ```bash
 pip install -r requirements.txt
 python iniciar_demo.py
