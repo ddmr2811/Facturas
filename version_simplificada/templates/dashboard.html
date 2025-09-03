@@ -21,7 +21,14 @@
             </div>
             <div class="user-info">
                 <i class="fas fa-user-circle me-2"></i>
-                Sistema Demo
+                {% if current_user.is_authenticated %}
+                    {{ current_user.username }}
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm ms-2">
+                        <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                    </a>
+                {% else %}
+                    Sistema Demo
+                {% endif %}
             </div>
         </div>
     </header>
@@ -120,9 +127,13 @@
                                         </td>
                                         <td>{{ factura.nombre }}</td>
                                         <td>
-                                            <a href="/descargar/{{ factura.archivo_procesado or factura.nombre }}" class="text-decoration-none text-success fw-bold" title="Descargar factura">
-                                                {{ factura.archivo_procesado or '-' }}
-                                            </a>
+                                            {% if factura.archivo_procesado %}
+                                                <a href="/descargar/{{ factura.id }}" class="text-decoration-none text-success fw-bold" title="Descargar factura">
+                                                    {{ factura.archivo_procesado }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
                                         </td>
                                         <td>{{ factura.cups or '-' }}</td>
                                         <td>{{ factura.direccion or '-' }}</td>

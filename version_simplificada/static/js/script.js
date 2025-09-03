@@ -137,13 +137,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const downloadBtn = document.getElementById('download-factura-modal');
         
         if (copyBtn) copyBtn.setAttribute('data-factura-id', facturaId);
-        if (downloadBtn) downloadBtn.setAttribute('data-factura', nombre);
+        if (downloadBtn) downloadBtn.setAttribute('data-factura-id', facturaId);
         
         // Mostrar el modal
         if (viewFacturaModal) viewFacturaModal.show();
         
-        // Cargar la vista previa del PDF (página 1)
-        loadPdfPreview(nombre);
+        // Cargar la vista previa del PDF usando el ID de la factura
+        loadPdfPreview(facturaId);
     }
 
     // Inicializar controles al cargar la página
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPdfFilename = '';
     
     // Función para cargar vista previa del PDF
-    function loadPdfPreview(filename, page = 1) {
+    function loadPdfPreview(facturaId, page = 1) {
         const previewImage = document.getElementById('pdf-preview-image');
         const loadingElement = document.getElementById('pdf-preview-loading');
         const previewContainer = document.getElementById('pdf-preview-container');
@@ -323,8 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
             previewContainer.classList.add('d-none');
         }
         
-        // Cargar la vista previa
-        fetch(`/pdf_preview/${encodeURIComponent(filename)}?page=${page}`)
+        // Cargar la vista previa usando el ID de la factura
+        fetch(`/pdf_preview/${facturaId}?page=${page}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Actualizar contadores de página
                         currentPdfPage = data.currentPage || 1;
                         totalPdfPages = data.totalPages || 1;
-                        currentPdfFilename = filename;
+                        currentPdfFilename = facturaId; // Ahora guardamos el ID
 
                         pageIndicator.textContent = `Página ${currentPdfPage} de ${totalPdfPages}`;
                         prevBtn.disabled = currentPdfPage <= 1;
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     if (nextPageBtn) {
         nextPageBtn.addEventListener('click', function() {
             if (currentPdfPage < totalPdfPages) {
@@ -457,8 +457,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadFacturaModalBtn = document.getElementById('download-factura-modal');
     if (downloadFacturaModalBtn) {
         downloadFacturaModalBtn.addEventListener('click', function() {
-            const nombre = document.getElementById('modal-view-nombre').textContent;
-            window.open(`/descargar/${nombre}`, '_blank');
+            const facturaId = this.getAttribute('data-factura-id');
+            if (facturaId) {
+                window.open(`/descargar/${facturaId}`, '_blank');
+            } else {
+                showToast('Error: ID de factura no encontrado', false);
+            }
         });
     }
 
