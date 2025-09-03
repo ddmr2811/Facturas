@@ -9,10 +9,16 @@ RUN apt-get update && apt-get install -y \
     gcc \
     poppler-utils \
     libpoppler-cpp-dev \
+    libpoppler-dev \
+    poppler-data \
     pkg-config \
     fontconfig \
     fonts-liberation \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Verificar que poppler está instalado correctamente
+RUN which pdftoppm && pdftoppm -h || echo "Poppler instalado pero pdftoppm no encontrado"
 
 # Copiar requirements
 COPY requirements.txt .

@@ -33,6 +33,22 @@ except ImportError:
 try:
     from pdf2image import convert_from_path
     PDF_PREVIEW_ENABLED = True
+    
+    # Diagnóstico de poppler al iniciar
+    import shutil
+    if shutil.which('pdftoppm'):
+        print("✅ Poppler detectado correctamente")
+    else:
+        print("⚠️ Poppler no encontrado en PATH")
+        # Buscar en rutas comunes
+        common_paths = ['/usr/bin/pdftoppm', '/usr/local/bin/pdftoppm', '/bin/pdftoppm']
+        for path in common_paths:
+            if os.path.exists(path):
+                print(f"✅ Poppler encontrado en: {path}")
+                break
+        else:
+            print("❌ Poppler no encontrado en rutas comunes")
+            
 except ImportError:
     PDF_PREVIEW_ENABLED = False
     print("Advertencia: pdf2image no disponible. Las vistas previas de PDF estarán limitadas.")
@@ -944,6 +960,38 @@ def toggle_procesado(id_factura):
     except Exception as e:
         return jsonify({'error': f'Error al actualizar estado: {str(e)}'}), 500
 
+@app.route('/diagnostico')
+@login_required
+def diagnostico():
+    """Diagnóstico del sistema para verificar dependencias"""
+    import shutil
+    import subprocess
+    
+    diagnostico_info = {
+        "pypdf2": PYPDF2_ENABLED,
+        "pil": PIL_ENABLED,
+        "pdf2image": PDF_PREVIEW_ENABLED,
+        "poppler_en_path": bool(shutil.which('pdftoppm')),
+        "poppler_version": None,
+        "rutas_poppler": []
+    }
+    
+    # Verificar versión de poppler
+    if shutil.which('pdftoppm'):
+        try:
+            result = subprocess.run(['pdftoppm', '-v'], capture_output=True, text=True, timeout=5)
+            diagnostico_info["poppler_version"] = result.stderr.strip() if result.stderr else result.stdout.strip()
+        except Exception as e:
+            diagnostico_info["poppler_error"] = str(e)
+    
+    # Buscar poppler en rutas comunes
+    common_paths = ['/usr/bin/pdftoppm', '/usr/local/bin/pdftoppm', '/bin/pdftoppm']
+    for path in common_paths:
+        if os.path.exists(path):
+            diagnostico_info["rutas_poppler"].append(path)
+    
+    return jsonify(diagnostico_info)
+
 @app.route('/pdf_preview/<path:filename>')
 @login_required
 def pdf_preview(filename):
@@ -978,9 +1026,32 @@ def pdf_preview(filename):
         
         # Intentar convertir con pdf2image con configuración específica
         try:
-            # Configurar poppler_path para diferentes sistemas
+            # Detectar poppler automáticamente
+            import subprocess
+            import shutil
+            
             poppler_path = None
-            # En contenedores Linux, poppler suele estar en PATH
+            
+            # Verificar si pdftoppm está disponible en PATH
+            if shutil.which('pdftoppm'):
+                print("Poppler encontrado en PATH")
+            else:
+                # Intentar rutas comunes en contenedores Linux
+                common_paths = [
+                    '/usr/bin',
+                    '/usr/local/bin',
+                    '/bin'
+                ]
+                for path in common_paths:
+                    if os.path.exists(os.path.join(path, 'pdftoppm')):
+                        poppler_path = path
+                        print(f"Poppler encontrado en: {poppler_path}")
+                        break
+            
+            # Configurar variables de entorno si es necesario
+            env = os.environ.copy()
+            if poppler_path:
+                env['PATH'] = f"{poppler_path}:{env.get('PATH', '')}"
             
             images = convert_from_path(
                 filepath, 
@@ -988,7 +1059,8 @@ def pdf_preview(filename):
                 last_page=page, 
                 dpi=150,
                 poppler_path=poppler_path,
-                timeout=30
+                timeout=30,
+                thread_count=1  # Usar solo un thread para evitar problemas
             )
             
             if not images:
