@@ -376,21 +376,8 @@ def detectar_comunidad_factura(texto, tipo_gasto):
             comunidad = re.sub(r'\s+', ' ', comunidad).strip()
             return comunidad if comunidad else None
     
-    # Para facturas de electricidad: buscar después de "Nombre/Razón social:"
-    elif tipo_gasto and tipo_gasto.lower() == 'electricidad':
-        m_nombre_razon = re.search(r'Nombre[/\s]*Razón\s+social[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
-        if m_nombre_razon:
-            comunidad = m_nombre_razon.group(1).strip()
-            # Limpiar y eliminar "COM PROP" y similares
-            comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
-            comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
-            # Limpiar guiones y comas al final, y espacios múltiples
-            comunidad = re.sub(r'[\s,\-]+$', '', comunidad)
-            comunidad = re.sub(r'\s+', ' ', comunidad).strip()
-            return comunidad if comunidad else None
-    
-    # Para facturas de luz también: buscar después de "Nombre/Razón social:"
-    elif tipo_gasto and tipo_gasto.lower() == 'luz':
+    # Para facturas de electricidad/luz: buscar después de "Nombre/Razón social:"
+    elif tipo_gasto and tipo_gasto.lower() in ['electricidad', 'luz']:
         m_nombre_razon = re.search(r'Nombre[/\s]*Razón\s+social[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
         if m_nombre_razon:
             comunidad = m_nombre_razon.group(1).strip()
@@ -418,10 +405,10 @@ def asignar_cuenta_contable_con_tipos(cups_o_contador, direccion, tipo_gasto):
     
     # 3. Fallback por tipo
     if tipo_gasto == 'Agua':
-        return 'EDIFICIO AGUA', '6281111'
+        return 'COMUNIDAD AGUA', '6281111'
     if tipo_gasto == 'Luz':
-        return 'EDIFICIO LUZ', '6282222'
-    return 'EDIFICIO GENERAL', '628'
+        return 'COMUNIDAD LUZ', '6282222'
+    return 'COMUNIDAD GENERAL', '628'
 
 def generar_nombre_archivo(fecha, proveedor, importe, numero_factura=None):
     """Genera un nombre de archivo basado en los datos de la factura"""
