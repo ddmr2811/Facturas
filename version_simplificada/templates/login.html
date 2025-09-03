@@ -21,7 +21,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            max-width: 420px;
+            max-width: 480px;
             width: 100%;
             margin: 0 20px;
         }
@@ -29,21 +29,22 @@
         .login-header {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
-            padding: 2.5rem 2rem;
+            padding: 3rem 2rem;
             text-align: center;
         }
         
         .login-header img {
-            width: 70px;
-            height: 70px;
-            margin-bottom: 1rem;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1.5rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
         
         .login-body {
-            padding: 2.5rem 2rem;
+            padding: 3rem 2.5rem;
         }
         
         .form-floating {
@@ -106,14 +107,40 @@
             color: #721c24;
             border-left: 4px solid #dc3545;
         }
+        
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .login-container {
+                max-width: 95%;
+                margin: 0 10px;
+            }
+            
+            .login-header {
+                padding: 2.5rem 1.5rem;
+            }
+            
+            .login-header img {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 1rem;
+            }
+            
+            .login-body {
+                padding: 2.5rem 1.5rem;
+            }
+            
+            .login-header h3 {
+                font-size: 1.4rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
             <img src="https://i.imgur.com/2pr7MD5.png" alt="Logo Empresa">
-            <h4 class="mb-0">Procesador de Facturas</h4>
-            <p class="mb-0 opacity-75">Carrobles Abogados</p>
+            <h3 class="mb-1 fw-bold">Procesador de Facturas</h3>
+            <p class="mb-0 opacity-75 fs-6">Carrobles Abogados</p>
         </div>
         
         <div class="login-body">
