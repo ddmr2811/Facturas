@@ -1080,14 +1080,11 @@ if __name__ == '__main__':
     os.makedirs('static/js', exist_ok=True)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
-    print("🚀 Iniciando servidor de facturas...")
-    print("📋 Usuarios disponibles:")
-    print("   • admin / Admin123!")
-    print("   • gestor / Gestor456!")
-    print("   • contador / Contador789!")
-    print("🌐 Login: http://127.0.0.1:5000/login")
-    
     # Configuración del servidor
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    print("🚀 Iniciando servidor de facturas...")
+    print(f"🌐 Aplicación lista en el puerto {port}")
+    
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
