@@ -1,1 +1,1 @@
-web: python iniciar_demo.py
+web: python app.py
