@@ -358,6 +358,35 @@ def detectar_contador(texto):
         return m3.group(1)
     return None
 
+def detectar_comunidad_factura(texto, tipo_gasto):
+    """Detecta la comunidad según el tipo de factura"""
+    if not texto:
+        return None
+    
+    # Para facturas de agua: buscar después de "Dirección fiscal:"
+    if tipo_gasto and tipo_gasto.lower() == 'agua':
+        m_direccion_fiscal = re.search(r'Dirección\s+fiscal[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
+        if m_direccion_fiscal:
+            comunidad = m_direccion_fiscal.group(1).strip()
+            # Limpiar y eliminar "COM PROP" y similares
+            comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r'\s+', ' ', comunidad).strip()
+            return comunidad if comunidad else None
+    
+    # Para facturas de electricidad: buscar después de "Nombre/Razón social:"
+    elif tipo_gasto and tipo_gasto.lower() == 'electricidad':
+        m_nombre_razon = re.search(r'Nombre[/\s]*Razón\s+social[:\s]*([^\n\r]+)', texto, re.IGNORECASE)
+        if m_nombre_razon:
+            comunidad = m_nombre_razon.group(1).strip()
+            # Limpiar y eliminar "COM PROP" y similares
+            comunidad = re.sub(r'COM\s*PROP[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r'COMUNIDAD\s+DE\s+PROPIETARIOS[^\w]*', '', comunidad, flags=re.IGNORECASE)
+            comunidad = re.sub(r'\s+', ' ', comunidad).strip()
+            return comunidad if comunidad else None
+    
+    return None
+
 def asignar_cuenta_contable_con_tipos(cups_o_contador, direccion, tipo_gasto):
     # 1. Buscar por CUPS/contador primero
     if cups_o_contador and cups_o_contador in MAPEO_CUENTAS_CONTABLES:
@@ -443,8 +472,14 @@ def procesar_pdf_texto(file_path):
     if not cups_contador and contador:
         cups_contador = contador
     
-    # Asignar cuenta contable
-    comunidad, cuenta_contable = asignar_cuenta_contable_con_tipos(cups_contador, direccion, tipo_gasto)
+    # Detectar comunidad específica según el tipo de factura
+    comunidad_especifica = detectar_comunidad_factura(texto, tipo_gasto)
+    
+    # Asignar cuenta contable (fallback si no se detecta comunidad específica)
+    comunidad_fallback, cuenta_contable = asignar_cuenta_contable_con_tipos(cups_contador, direccion, tipo_gasto)
+    
+    # Usar comunidad específica si se detectó, sino usar el fallback
+    comunidad_final = comunidad_especifica or comunidad_fallback
     
     return {
         'texto_completo': texto,
@@ -458,7 +493,7 @@ def procesar_pdf_texto(file_path):
         'cod_abast': cod_abast,
         'poliza': poliza,
         'contador': contador,
-        'comunidad': comunidad,
+        'comunidad': comunidad_final,
         'cuenta_contable': cuenta_contable
     }
 
@@ -721,12 +756,17 @@ def upload_file():
         cod_abast, poliza = detectar_poliza_y_cod_abast(pdf_text)
         contador = detectar_contador(pdf_text)
 
-        # LOGICA DE PRIORIDAD DE ASIGNACION (1 Dirección, 2 Póliza/Cód Abast., 3 Contador, 4 Periodo)
+        # LOGICA DE PRIORIDAD DE ASIGNACION (1 Comunidad específica, 2 Dirección, 3 Póliza/Cód Abast., 4 Contador, 5 Periodo)
         comunidad_asig = None
         cuenta_asig = None
 
-        # 1) Intentar por dirección (normalizando)
-        if direccion:
+        # 1) Intentar detectar comunidad específica según tipo de factura
+        comunidad_especifica = detectar_comunidad_factura(pdf_text, tipo)
+        if comunidad_especifica:
+            comunidad_asig = comunidad_especifica
+
+        # 2) Intentar por dirección (normalizando)
+        if not comunidad_asig and direccion:
             # Normalizar y buscar en mapas por coincidencia cercana
             dkey = _normalize_dir_key(direccion)
             for (t, d), datos in DIRECCIONES_POR_TIPO.items():
@@ -735,7 +775,7 @@ def upload_file():
                     cuenta_asig = datos.get('cuenta')
                     break
 
-        # 2) Intentar por póliza o código de abastecimiento en mappings secretos
+        # 3) Intentar por póliza o código de abastecimiento en mappings secretos
         if not comunidad_asig and (poliza or cod_abast):
             # buscar en MAPEO_CUENTAS_CONTABLES por campos internos
             for k, v in MAPEO_CUENTAS_CONTABLES.items():
@@ -751,14 +791,14 @@ def upload_file():
                     cuenta_asig = info.get('cuenta')
                     break
 
-        # 3) Intentar por contador
+        # 4) Intentar por contador
         if not comunidad_asig and contador:
             if contador in MAPEO_CUENTAS_CONTABLES:
                 info = MAPEO_CUENTAS_CONTABLES[contador]
                 comunidad_asig = info.get('comunidad')
                 cuenta_asig = info.get('cuenta')
 
-        # 4) Fallback a asignaciones por tipo si aún no asignado
+        # 5) Fallback a asignaciones por tipo si aún no asignado
         if not comunidad_asig:
             comunidad_asig, cuenta_asig = asignar_cuenta_contable_con_tipos(cups, direccion, tipo)
 
